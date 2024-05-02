@@ -15,7 +15,7 @@ module median_calc_tb();
     
     
     median_calc #(
-       .POPSIZE(100),
+       .POPSIZE(10),
        .DATA_WIDTH(8)
     )
     dut(

@@ -1,89 +1,57 @@
-`timescale 1ns/1ps
+module calc_total_tb;
+parameter POPSIZE = 100;
+parameter WINSIZE = 200;
+parameter FRAME_SIZE = 20;
+parameter DATA_WIDTH = 8;
+parameter scale_factor = 'h017C;
+logic clk;
+logic rst;
+logic data_rdy;
+logic [DATA_WIDTH -1:0] data_in;
+logic new_data;
+logic rd_from_chi;
 
-module chi_squared_tb;
-
-  parameter POPSIZE = 100;
-  parameter WINSIZE = 200;
-  parameter FRAME_SIZE = 20;
-  parameter DATA_WIDTH = 8;
-  parameter DoF = 5;
-
-  logic clk;
-  logic rst;
-  logic [$clog2(WINSIZE):0] num_edges;
-  logic opp_rdy;
-  logic data_rdy;
-  logic [7:0] median;
-  logic [15:0] MAD;
-  logic [7:0] counttillmean;
-  logic rd_rqst;
-  logic [$clog2(POPSIZE)-1:0] rd_addr;
-  logic [$clog2(POPSIZE):0] bin_out;
-  logic calc_done;
-  logic data_vld;
-  logic data_rdy_REG;
-  logic data_vld_REG;
-  logic new_data;
-  logic [DATA_WIDTH-1:0] data_out;
-  logic [DATA_WIDTH-1:0] data_in;
+logic rd_rqst;
+logic [$clog2(POPSIZE)-1:0] addr_out;
+logic data_vld;
+logic [$clog2(POPSIZE):0] bin_out;
+logic calc_done;
+ logic [DATA_WIDTH-1:0] data_out;
   int edge_nums[100];
-  logic [15:0] O_in;
-  logic rd_en;
-  logic [31:0] chi_out;
-  logic data_vld_chi;
+    logic data_rdy_REG;
+  logic data_vld_REG;
   
   
- 
-  
-
-  dist_gen #(
-    .POPSIZE(POPSIZE),
-    .WINSIZE(WINSIZE)
-  ) dut (
+calc_total #(.WINSIZE(WINSIZE),.scale_factor(scale_factor),.POPSIZE(POPSIZE),.DATA_WIDTH(DATA_WIDTH))
+dut_0(
     .clk(clk),
     .rst(rst),
-    .num_edges(data_out),
-    .opp_rdy(opp_rdy),
     .data_rdy(data_vld_REG),
-    .median(median),
-    .MAD(MAD),
-    .counttillmean(counttillmean),
+    .data_in(data_out),
+    .new_data(new_data),
+    .rd_from_chi(rd_from_chi),
     .rd_rqst(rd_rqst),
-    .rd_addr(rd_addr),
-    .bin_out(bin_out),
-    .calc_done(calc_done),
+    .addr_out(addr_out),
     .data_vld(data_vld),
-    .rd_en(rd_en)
-  );
+    .bin_out(bin_out),
+    .calc_done(calc_done)
+);
 
-  reg_file #(
+
+reg_file #(
     .POPSIZE(POPSIZE),
     .FRAME_SIZE(FRAME_SIZE),
     .DATA_WIDTH(DATA_WIDTH)
   ) reg_file_inst (
     .clk(clk),
     .rst(rst),
-    .read_addr(rd_addr),
+    .read_addr(addr_out),
     .data_in(data_in),
     .data_rdy(data_rdy_REG),
-    .rd_rqst(rd_en),
+    .rd_rqst(rd_rqst),
     .new_data(new_data),
     .data_vld(data_vld_REG),
     .data_out(data_out)
-  );
-
-   chi_squared #(
-    .DoF(DoF),
-    .POPSIZE(POPSIZE)
-  ) dut_chi (
-    .clk(clk),
-    .rst(rst),
-    .O_in({bin_out,8'b0}),
-    .data_rdy(data_vld),
-    .calc_done(calc_done),
-    .rd_rqst(rd_rqst),
-    .chi_out(chi_out),
-    .data_vld(data_vld_chi)
   );
 
   // Clock generation
@@ -99,11 +67,6 @@ module chi_squared_tb;
     rst = 1'b1;
     data_in = 'b0;
     data_rdy_REG = 1'b0;
-    opp_rdy = 1'b0;
-    median = 8'h2F; // Local median = 47.0
-    MAD = 16'h0748; // MAD = 7.412999999999999
-    counttillmean = 8'h2C; // counttillmean = 44
-    rd_rqst = 1'b0;
     #20;
     rst = 1'b0;
 
@@ -130,18 +93,23 @@ module chi_squared_tb;
     #20;
 
     // Assert opp_rdy to start the generation state
-    opp_rdy = 1'b1;
-    #10;
-    opp_rdy = 1'b0;
 
     // Wait for calc_done signal
     wait(calc_done);
 
     // Assert rd_rqst to read the bins
+    for (int i = 0; i < 6; i++) begin
+      @(posedge clk);
+      rd_rqst = 1'b1;
+      @(posedge clk);
+      rd_rqst = 1'b0;
+      $display("Bin[%0d] = %0d", i, bin_out);
+    end
 
     // Finish simulation
     #20;
     $finish;
   end
+
 
 endmodule

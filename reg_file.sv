@@ -19,8 +19,8 @@ logic [$clog2(POPSIZE+FRAME_SIZE)-1:0]wr_offset_q;
 logic [$clog2(POPSIZE+FRAME_SIZE)-1:0]wr_offset_d;
 logic init_q;
 logic init_d;
-logic [$clog2(POPSIZE)-1:0] counter_d;
-logic [$clog2(POPSIZE)-1:0] counter_q;
+logic [$clog2(POPSIZE *2)-1:0] counter_d;
+logic [$clog2(POPSIZE *2)-1:0] counter_q;
 logic new_data_q;
 logic new_data_d;
 logic data_vld_d;
@@ -62,43 +62,48 @@ always_comb begin
     rd_offest_d = rd_offest_q;
     data_vld_d = 'b0;
     init_d = init_q;
-
-    if(data_rdy)begin
-        if(rd_rqst)begin
+    if(rd_rqst)begin
             data_vld_d = 'b1;
-        end
+            if(counter_q == ((POPSIZE *2) -1)) begin
+                counter_d = 'b0;
+            end else begin
+                counter_d = counter_q +1;
+            end
+    end
+    if(data_rdy)begin
         regs[wr_offset_q] = data_in;
         if(wr_offset_q == (POPSIZE + FRAME_SIZE -1))begin
-            counter_d = 'b0;
             wr_offset_d = 'b0;
         end else begin
             wr_offset_d = wr_offset_q +1;
-            counter_d = counter_q +1;
         end
 
 
         if(!init_q) begin
             if(wr_offset_q == POPSIZE -1 ) begin
                 init_d = 'b1;
-                rd_offest_d = FRAME_SIZE;
                 new_data_d = 'b1;
             end
         end else begin
-            if(counter_q == FRAME_SIZE-1)begin
-                new_data_d = 'b1;
+            if(counter_q == FRAME_SIZE) begin
                 counter_d = 'b0;
+                new_data_d = 'b1;
+            end else begin
+                counter_d = counter_q +1;
+            end
+            if( wr_offset_q == POPSIZE + FRAME_SIZE -1 || wr_offset_q == FRAME_SIZE -1) begin
                 if(rd_offest_q == FRAME_SIZE) begin
                     rd_offest_d = 'b0;
                 end else begin
                     rd_offest_d = FRAME_SIZE;
                 end
-            end else begin
-            end 
+            end
+        end
+        
             
         end
 
     end
-end
 
 
 endmodule

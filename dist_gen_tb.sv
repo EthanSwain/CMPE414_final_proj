@@ -1,12 +1,11 @@
 `timescale 1ns/1ps
 
-module chi_squared_tb;
+module dist_gen_tb;
 
   parameter POPSIZE = 100;
   parameter WINSIZE = 200;
   parameter FRAME_SIZE = 20;
   parameter DATA_WIDTH = 8;
-  parameter DoF = 5;
 
   logic clk;
   logic rst;
@@ -18,7 +17,7 @@ module chi_squared_tb;
   logic [7:0] counttillmean;
   logic rd_rqst;
   logic [$clog2(POPSIZE)-1:0] rd_addr;
-  logic [$clog2(POPSIZE):0] bin_out;
+  logic [$clog2(POPSIZE)-1:0] bin_out;
   logic calc_done;
   logic data_vld;
   logic data_rdy_REG;
@@ -27,10 +26,7 @@ module chi_squared_tb;
   logic [DATA_WIDTH-1:0] data_out;
   logic [DATA_WIDTH-1:0] data_in;
   int edge_nums[100];
-  logic [15:0] O_in;
   logic rd_en;
-  logic [31:0] chi_out;
-  logic data_vld_chi;
   
   
  
@@ -70,20 +66,6 @@ module chi_squared_tb;
     .new_data(new_data),
     .data_vld(data_vld_REG),
     .data_out(data_out)
-  );
-
-   chi_squared #(
-    .DoF(DoF),
-    .POPSIZE(POPSIZE)
-  ) dut_chi (
-    .clk(clk),
-    .rst(rst),
-    .O_in({bin_out,8'b0}),
-    .data_rdy(data_vld),
-    .calc_done(calc_done),
-    .rd_rqst(rd_rqst),
-    .chi_out(chi_out),
-    .data_vld(data_vld_chi)
   );
 
   // Clock generation
@@ -138,6 +120,13 @@ module chi_squared_tb;
     wait(calc_done);
 
     // Assert rd_rqst to read the bins
+    for (int i = 0; i < 6; i++) begin
+      @(posedge clk);
+      rd_rqst = 1'b1;
+      @(posedge clk);
+      rd_rqst = 1'b0;
+      $display("Bin[%0d] = %0d", i, bin_out);
+    end
 
     // Finish simulation
     #20;
