@@ -37,6 +37,8 @@ logic [$clog2(WINSIZE)-1:0] encode_out_d;
 logic [$clog2(WINSIZE)-1:0] encode_out_q;
 logic [7:0] counter_d;
 logic [7:0] counter_q;
+logic intr_rst_q;
+logic intr_rst_d;
 assign data_rdy_d = data_rdy;
 assign num_edges = num_edges_q;
 assign data_vld = data_vld_q;
@@ -48,7 +50,7 @@ genvar i;
 generate
     for(i =0; i<WINSIZE;i++) begin
         matrix_el #(.POPSIZE(POPSIZE),.WINSIZE(WINSIZE),.ID_WIDTH(ID_WIDTH))
-        instance_i(.clk(clk),.rst(rst),.edge_in(ID_in_q),.edge_rdy(edge_rdy_q),.data_rdy_in(data_rdy_in_q[i]),.edge_addr(edge_addr_q),.has_edge(has_edge_arr[i]),.is_equal(is_equal_arr[i]));
+        instance_i(.clk(clk),.rst(rst||intr_rst_q),.edge_in(ID_in_q),.edge_rdy(edge_rdy_q),.data_rdy_in(data_rdy_in_q[i]),.edge_addr(edge_addr_q),.has_edge(has_edge_arr[i]),.is_equal(is_equal_arr[i]));
     end
 
 endgenerate
@@ -62,6 +64,7 @@ always_ff @(posedge clk or posedge rst) begin
     if(rst)begin
         data_vld_q <= 'b0;
         num_edges_q <= 'b0;
+        intr_rst_q <= 'b0;
         edge_addr_q <= 'b0;
         data_rdy_q <= 'b0;
         edge_rdy_q <= 'b0;
@@ -80,6 +83,7 @@ always_ff @(posedge clk or posedge rst) begin
         data_rdy_q <= data_rdy_d;
         edge_rdy_q <= edge_rdy_d;
         curr_state <= next_state;
+        intr_rst_q <= intr_rst_d;
         msg_counter_q <= msg_counter_d;
         prev_msg_q <=  prev_msg_d;
         curr_msg_q <= curr_msg_d;
@@ -101,6 +105,7 @@ always_comb begin
     curr_msg_d = curr_msg_q;
     data_rdy_in_d = data_rdy_in_q;
     counter_d = counter_q;
+    intr_rst_d = 'b0;
     ID_in_d = ID_in_q;
     case(curr_state)
         idle_state : begin
@@ -149,6 +154,7 @@ always_comb begin
             end
             if(msg_counter_q == WINSIZE -1) begin
                 next_state = send_state;
+                intr_rst_d = 'b1;
             end else begin
                 next_state = idle_state;
             end

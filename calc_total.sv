@@ -9,7 +9,7 @@ module calc_total #(parameter WINSIZE=200,scale_factor = 'h017C,POPSIZE = 100, D
     output logic rd_rqst,
     output logic [$clog2(POPSIZE)-1:0] addr_out,
     output logic data_vld,
-    output logic [$clog2(POPSIZE):0] bin_out,
+    output logic [$clog2(POPSIZE)-1:0] bin_out,
     output logic calc_done
 
 );

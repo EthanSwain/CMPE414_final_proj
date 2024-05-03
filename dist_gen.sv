@@ -10,7 +10,7 @@ module dist_gen #(POPSIZE = 100,WINSIZE = 200)(
     input logic rd_rqst,
 
     output logic [$clog2(POPSIZE)-1:0] rd_addr,
-    output logic [$clog2(POPSIZE):0] bin_out,
+    output logic [$clog2(POPSIZE)-1:0] bin_out,
     output logic calc_done,
     output logic data_vld,
     output logic rd_en
@@ -18,14 +18,14 @@ module dist_gen #(POPSIZE = 100,WINSIZE = 200)(
 
 
 
-logic [7:0] bins_k [0:5];
+logic [$clog2(POPSIZE)-1:0] bins_k [0:5];
 
 logic data_vld_d;
 logic data_vld_q;
 logic calc_done_d;
 logic calc_done_q;
-logic [$clog2(POPSIZE):0]bin_out_q;
-logic [$clog2(POPSIZE):0]bin_out_d;
+logic [$clog2(POPSIZE)-1:0]bin_out_q;
+logic [$clog2(POPSIZE)-1:0]bin_out_d;
 logic [$clog2(POPSIZE)-1:0]rd_addr_q;
 logic [$clog2(POPSIZE)-1:0]rd_addr_d;
 logic [15:0]median_intr_d;

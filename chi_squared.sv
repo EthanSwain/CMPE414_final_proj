@@ -2,7 +2,7 @@
 module chi_squared #(parameter DoF = 5, POPSIZE = 100)(
     input logic clk,
     input logic rst,
-    input logic [15:0]O_in,
+    input logic [$clog2(POPSIZE)+7:0]O_in,
     input logic data_rdy,
     input logic calc_done,
     
@@ -11,20 +11,20 @@ module chi_squared #(parameter DoF = 5, POPSIZE = 100)(
     output logic data_vld
 );
 
-logic [15:0] O_in_q;
-logic [15:0] O_in_d;
+logic [$clog2(POPSIZE)+7:0] O_in_q;
+logic [$clog2(POPSIZE)+7:0] O_in_d;
 logic rd_rqst_d;
 logic rd_rqst_q;
-logic [31:0] chi_out_d;
-logic [31:0] chi_out_q;
+logic [2*$clog2(POPSIZE)+7:0] chi_out_d;
+logic [2*$clog2(POPSIZE)+7:0] chi_out_q;
 logic [7:0] counter_d;
 logic [7:0] counter_q;
 logic [7:0] sum_counter_d;
 logic [7:0] sum_counter_q;
-logic [31:0] tmp_sum_d;
-logic [31:0] tmp_sum_q;
-logic [15:0] E_d;
-logic [15:0] E_q;
+logic [2*$clog2(POPSIZE)+7:0] tmp_sum_d;
+logic [2*$clog2(POPSIZE)+7:0] tmp_sum_q;
+logic [$clog2(POPSIZE)+7:0] E_d;
+logic [$clog2(POPSIZE)+7:0] E_q;
 logic data_vld_q;
 logic data_vld_d;
 logic [15:0] k_values[0:5];
